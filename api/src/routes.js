@@ -1,16 +1,18 @@
 import FileHelper from "./fileHelper.js";
 import { logger } from "./logger.js";
-import { dirname, resolve } from 'path'
-import { fileURLToPath } from 'url'
+import { dirname, resolve } from "path";
+import { fileURLToPath, parse } from "url";
+import UploadHandler from "./uploadHandler.js";
+import { pipeline } from "stream/promises";
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const defaultDownloadsFolder = resolve(__dirname, '../', 'downloads')
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const defaultDownloadsFolder = resolve(__dirname, "../", "downloads");
 
 export default class Routes {
-  io;
   constructor(downloadsFolder = defaultDownloadsFolder) {
-    this.downloadsFolder
-    this.filehelper = FileHelper
+    this.downloadsFolder = downloadsFolder;
+    this.filehelper = FileHelper;
+    this.io = {}
   }
 
   setSocketInstance(io) {
@@ -18,14 +20,40 @@ export default class Routes {
   }
 
   async get(request, response) {
-    const files = await this.filehelper.getFileStatus(this.downloadsFolder ?? defaultDownloadsFolder)
-    response.writeHead(200)
+    const files = await this.filehelper.getFileStatus(
+      this.downloadsFolder
+    );
+    response.writeHead(200);
     response.end(JSON.stringify(files));
   }
 
   async post(request, response) {
-    logger.info("POST");
-    response.end();
+    const { headers } = request;
+
+    const {
+      query: { socketId },
+    } = parse(request.url, true);
+
+    const uploadHandler = new UploadHandler({
+      socketId,
+      io: this.io,
+      downloadsFolder: this.downloadsFolder,
+    });
+
+    const onFinish = (response) => () => {
+      response.writeHead(200);
+      const data = JSON.stringify({ result: "Files uploaded with succes!" });
+      response.end(data);
+    };
+
+    const busboyInstance = uploadHandler.registerEvents(
+      headers,
+      onFinish(response)
+    );
+
+    await pipeline(request, busboyInstance);
+
+    logger.info("Request finish with success!!");
   }
 
   async options(request, response) {
