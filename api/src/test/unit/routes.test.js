@@ -1,4 +1,4 @@
-import { describe, test, expect, jest } from "@jest/globals";
+import { describe, expect, jest, test } from "@jest/globals";
 import { logger } from "../../logger";
 import Routes from "../../routes";
 import UploadHandler from "../../uploadHandler";
@@ -48,10 +48,9 @@ describe("#Routes test suite", () => {
       const params = { ...defaultParams };
       params.request.method = "inexistent";
       await routes.handler(...params.values());
-      expect(params.response.setHeader).toHaveBeenCalledWith(
-        "Acess-Control-Allow-Origin",
-        "*"
-      );
+      expect(params.response.setHeader).toHaveBeenCalledWith('access-control-allow-origin', '*')
+      expect(params.response.setHeader).toHaveBeenCalledWith('access-control-allow-methods', '*')
+      expect(params.response.setHeader).toHaveBeenCalledWith('access-control-allow-headers', '*')
     });
     test("given method OPTION it should chose options route", async () => {
       const routes = new Routes();

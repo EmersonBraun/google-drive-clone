@@ -1,9 +1,9 @@
+import { dirname, resolve } from "path";
+import { pipeline } from "stream/promises";
+import { fileURLToPath, parse } from "url";
 import FileHelper from "./fileHelper.js";
 import { logger } from "./logger.js";
-import { dirname, resolve } from "path";
-import { fileURLToPath, parse } from "url";
 import UploadHandler from "./uploadHandler.js";
-import { pipeline } from "stream/promises";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const defaultDownloadsFolder = resolve(__dirname, "../", "downloads");
@@ -66,7 +66,10 @@ export default class Routes {
   }
 
   handler(request, response) {
-    response.setHeader("Acess-Control-Allow-Origin", "*");
+    // response.setHeader("Acess-Control-Allow-Origin", "*");
+    response.setHeader('access-control-allow-origin', '*')
+    response.setHeader('access-control-allow-methods', '*')
+    response.setHeader('access-control-allow-headers', '*')
     const chosen = this[request.method.toLowerCase()] || this.defaultRoute;
     return chosen.apply(this, [request, response]);
   }
